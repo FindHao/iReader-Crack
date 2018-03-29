@@ -1,6 +1,7 @@
 #!/bin/bash
 
-version="r2"
+mv log log.last
+version="r3"
 
 function pause()
 {
@@ -11,14 +12,16 @@ function pause()
   fi
 }
 
-function header()
+function stage()
 {
   echo ""
   echo "第 $1 阶段: $2"
+  echo "Stage $1" >> log 
 }
 
 function init_adb()
 {
+  echo "Initializing adb" >> log
   adb kill-server >> log
   adb start-server >> log
 }
@@ -30,10 +33,13 @@ function check_env()
   adb_exec=`which adb`
   if [[ ${issue:0:6} != "Ubuntu" ]]; then
     echo "当前使用的系统不是Ubuntu，可能不受支持"
+    echo "Not Ubuntu" >> log
     pause
   elif [[ ${adb_exec:0:1} != "/" ]]; then
     echo "未检测到adb程序"
-    pause "按任意键执行安装"
+    echo "adb Not Found" >> log
+    pause "按任意键执行安装，可能需要输入密码"
+    echo "adb Installing" >> log
     sudo apt-get update
     sudo apt-get install adb
     check_env
@@ -43,6 +49,7 @@ function check_env()
   
   WSL=$(echo `uname -a` | grep -o "Microsoft" | wc -l)
   if [[ $WSL != "" ]]; then
+    echo "IS WSL Subsystem" >> log
     echo "检测到使用 Windows 10 Linux 子系统"
     echo "请安装 Windows 的 adb 驱动，打开 adb 程序"
     echo "Windows中命令行操作如下:"
@@ -57,6 +64,7 @@ function check_env()
 
 function recovery()
 {
+  echo "Copying Recovery Shell Files" >> log
   adb push crack/bin /system/bin/ >> log
   adb push crack/lib /system/lib/ >> log
   adb shell "/system/bin/mount -t ext4 /dev/block/mmcblk0p5 /system" >> log
@@ -73,12 +81,14 @@ function enable_adb()
   echo ""
   echo "正在尝试开启adb……"
   echo "预计需要1分钟"
+  echo "Enabling Adb During Booting" >> log
   start=`date +%s`
   while true
   do
     adb shell "echo 'mtp,adb' > /data/property/persist.sys.usb.config" >> log
     adb shell "echo '1' > /data/property/persist.service.adb.enable" >> log
-    if [[ `expr $(date +%s) - "$start"` > "60" ]]; then
+    dif=`expr $(date +%s) - "$start"`
+    if [ "$dif" -gt "60" ]; then
       break
     fi
   done
@@ -87,13 +97,12 @@ function enable_adb()
 
 function main()
 {
-  mv log log.last
   clear
   
   echo "       iReader Light/Ocean 阅读器 破解"
   echo "             for Linux(Ubuntu)"
   echo "                     $version"
-  header "1" "使用前须知"
+  stage "1" "使用前须知"
   
   echo "注意事项:"
   echo "1. 请确保安装好相关组件，包括adb及adb驱动"
@@ -106,11 +115,11 @@ function main()
   sleep 3
   pause
   
-  header "2" "环境检测"
+  stage "2" "环境检测"
   check_env
   sleep 1
   
-  header "3" "进入Recovery"
+  stage "3" "进入Recovery"
   echo "请按如下步骤操作："
   echo "1. 将iReader用数据线连接至电脑"
   echo "2. 阅读器上 选择 设置-->关于本机-->恢复出厂设置"
@@ -118,6 +127,7 @@ function main()
   echo ""
   
   echo "正在检测是否进入Recovery……"
+  echo "Checking Recovery" >> log
   while true
   do
     sleep 0.1
@@ -132,7 +142,7 @@ function main()
   recovery
   
   echo "完成，等待重启……"
-  
+  echo "Waiting for Reboot" >> log
   while true
   do
     sleep 0.1
@@ -142,8 +152,9 @@ function main()
     fi
   done
   
-  header "4" "启动破解"
+  stage "4" "启动破解"
   echo "正在检测破解前准备是否生效……"
+  echo "Checking if Crack Applied" >> log
   while true
   do
     sleep 0.1
@@ -152,6 +163,7 @@ function main()
     if [[ "$check_unauth" != "" ]]; then
       echo "出现错误，10秒后请重新尝试"
       echo "Error: unauthorized device"
+      echo `adb devices` >> log
       sleep 10
       main
     elif [[ "$check_dev" == "2" ]]; then
@@ -161,11 +173,18 @@ function main()
   
   enable_adb
   
+  echo ""
+  echo "请手动重启阅读器"
+  echo "Waiting for Reboot Manually" >> log
+  pause
+  
   check_dev=$(echo `adb devices` | grep -o "device" | wc -l)
   if [[ "$check_dev" == "2" ]]; then
     echo "破解成功，现可以通过adb安装程序"
+    echo "Done" >> log
   else
     echo "破解失败，请尝试重新破解或进行反馈"
+    echo "Failed" >> log
   fi
   pause "按任意键退出"
 }
