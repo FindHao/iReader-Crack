@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mv log log.last
-version="r4"
+version="r5"
 home=$(cd `dirname $0`; pwd)
 
 function pause()
@@ -23,8 +23,8 @@ function stage()
 function init_adb()
 {
   echo "Initializing adb" >> log
-  adb kill-server >> log
-  adb start-server >> log
+  adb kill-server
+  adb start-server
 }
 
 function check_env()
@@ -66,28 +66,26 @@ function check_env()
 function recovery()
 {
   echo "Copying Recovery Shell Files" >> log
-  adb push $home/crack/bin /system/bin/ >> log
-  adb push $home/crack/lib /system/lib/ >> log
-  adb shell "/system/bin/mount -t ext4 /dev/block/mmcblk0p5 /system" >> log
-  adb shell "echo 'persist.service.adb.enable=1' >> /system/build.prop" >> log
-  adb shell "echo 'persist.service.debuggable=1' >> /system/build.prop" >> log
-  adb shell "echo 'persist.sys.usb.config=mtp,adb' >> /system/build.prop" >> log
-  adb shell "echo 'ro.secure=0' >> /system/build.prop" >> log
-  adb shell "echo 'ro.adb.secure=0' >> /system/build.prop" >> log
-  adb shell "echo 'ro.debuggable=1' >> /system/build.prop" >> log
+  adb push $home/crack/bin /system/bin/
+  adb push $home/crack/lib /system/lib/
+  adb shell "/system/bin/mount -t ext4 /dev/block/mmcblk0p5 /system"
+  adb shell "echo 'persist.service.adb.enable=1' >> /system/build.prop"
+  adb shell "echo 'persist.service.debuggable=1' >> /system/build.prop"
+  adb shell "echo 'persist.sys.usb.config=mtp,adb' >> /system/build.prop"
+  adb shell "echo 'ro.secure=0' >> /system/build.prop"
+  adb shell "echo 'ro.adb.secure=0' >> /system/build.prop"
+  adb shell "echo 'ro.debuggable=1' >> /system/build.prop"
 }
 
 function enable_adb()
 {
-  echo ""
-  echo "正在尝试开启adb……"
-  echo "预计需要1分钟"
   echo "Enabling Adb During Booting" >> log
   start=`date +%s`
   while true
   do
-    adb shell "echo 'mtp,adb' > /data/property/persist.sys.usb.config" >> log
-    adb shell "echo '1' > /data/property/persist.service.adb.enable" >> log
+    sleep 0.1
+    adb shell "echo 'mtp,adb' > /data/property/persist.sys.usb.config"
+    adb shell "echo '1' > /data/property/persist.service.adb.enable"
     dif=`expr $(date +%s) - "$start"`
     if [ "$dif" -gt "60" ]; then
       break
@@ -153,9 +151,11 @@ function main()
     fi
   done
   
-  stage "4" "启动破解"
-  echo "正在检测破解前准备是否生效……"
-  echo "Checking if Crack Applied" >> log
+  stage "4" "执行破解"
+  echo "正在执行破解……"
+  echo "预计需要1分钟"
+  echo "Checking Crack Applied" >> log
+  sleep 3
   while true
   do
     sleep 0.1
@@ -177,8 +177,9 @@ function main()
   echo ""
   echo "请手动重启阅读器"
   echo "Waiting for Reboot Manually" >> log
-  pause
+  pause "重启进阅读器界面后按任意键继续"
   
+  echo ""
   check_dev=$(echo `adb devices` | grep -o "device" | wc -l)
   if [[ "$check_dev" == "2" ]]; then
     echo "破解成功，现可以通过adb安装程序"
