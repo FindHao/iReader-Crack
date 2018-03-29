@@ -2,7 +2,7 @@
 
 mv log log.last
 version="r4"
-home=`pwd`
+home=$(cd `dirname $0`; pwd)
 
 function pause()
 {
