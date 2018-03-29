@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r1"
+version="r2"
 
 function pause()
 {
@@ -22,7 +22,6 @@ function init_adb()
   adb kill-server >> log
   adb start-server >> log
 }
-  echo ""
 
 function check_env()
 {
@@ -30,14 +29,17 @@ function check_env()
   issue=`cat /etc/issue`
   adb_exec=`which adb`
   if [[ ${issue:0:6} != "Ubuntu" ]]; then
-    echo "当前使用的系统并非Ubuntu，可能不受支持"
+    echo "当前使用的系统不是Ubuntu，可能不受支持"
     pause
   elif [[ ${adb_exec:0:1} != "/" ]]; then
     echo "未检测到adb程序"
     pause "按任意键执行安装"
+    sudo apt-get update
     sudo apt-get install adb
     check_env
   fi
+  
+  echo ""
   
   WSL=$(echo `uname -a` | grep -o "Microsoft" | wc -l)
   if [[ $WSL != "" ]]; then
@@ -48,7 +50,6 @@ function check_env()
     echo "adb start-server"
     pause "完成后不要关闭Windows的adb，按任意键继续"
   else
-    echo ""
     echo "初始化adb……"
     init_adb
   fi
@@ -71,6 +72,7 @@ function enable_adb()
 {
   echo ""
   echo "正在尝试开启adb……"
+  echo "预计需要1分钟"
   start=`date +%s`
   while true
   do
@@ -80,6 +82,7 @@ function enable_adb()
       break
     fi
   done
+  #主程序会关闭adb，不得不循环破解
 }
 
 function main()
@@ -95,10 +98,10 @@ function main()
   echo "注意事项:"
   echo "1. 请确保安装好相关组件，包括adb及adb驱动"
   echo "2. 请严格按照程序提示操作，否则有可能变砖"
-  echo "3. 本程序仅在Ubuntu测试通过，其他环境未测试"
+  echo "3. 本程序仅在Ubuntu测试通过，其他系统未测试"
   echo "4. 操作前备份好用户数据(电纸书)"
   echo "5. 破解前移除其他所有Android设备"
-  echo "6. 如破解过程中已进入阅读器主界面但程序未响应，请强制关闭再次尝试或进行反馈"
+  echo "6. 如破解过程中已进入阅读器主界面但程序未响应，请强制关闭后再次尝试或进行反馈"
   echo ""
   sleep 3
   pause
@@ -140,14 +143,14 @@ function main()
   done
   
   header "4" "启动破解"
-  echo "正在检测破解文件……"
+  echo "正在检测破解前准备是否生效……"
   while true
   do
     sleep 0.1
     check_unauth=$(echo `adb devices` | grep "unauthorized")
     check_dev=$(echo `adb devices` | grep -o "device" | wc -l)
     if [[ "$check_unauth" != "" ]]; then
-      echo "出现错误，10s后请重新尝试"
+      echo "出现错误，10秒后请重新尝试"
       echo "Error: unauthorized device"
       sleep 10
       main
