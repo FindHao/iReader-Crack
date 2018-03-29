@@ -83,7 +83,6 @@ function enable_adb()
   start=`date +%s`
   while true
   do
-    sleep 0.1
     adb shell "echo 'mtp,adb' > /data/property/persist.sys.usb.config"
     adb shell "echo '1' > /data/property/persist.service.adb.enable"
     dif=`expr $(date +%s) - "$start"`
@@ -122,55 +121,21 @@ function main()
   echo "请按如下步骤操作："
   echo "1. 将iReader用数据线连接至电脑"
   echo "2. 阅读器上 选择 设置-->关于本机-->恢复出厂设置"
-  echo "3. 等待出现机器人标识，程序识别"
+  echo "3. 等待出现机器人标识"
   echo ""
-  
-  echo "正在检测是否进入Recovery……"
-  echo "Checking Recovery" >> log
-  while true
-  do
-    sleep 0.1
-    check_rec=$(echo `adb devices` | grep "recovery")
-    if [[ "$check_rec" != "" ]]; then
-      break
-    fi
-  done
+  pause "出现机器人标识时按任意键继续"
   
   echo ""
   echo "正在复制破解文件……"
   recovery
   
-  echo "完成，等待重启……"
+  echo "等待重启……"
   echo "Waiting for Reboot" >> log
-  while true
-  do
-    sleep 0.1
-    check_rec=$(echo `adb devices` | grep "recovery")
-    if [[ "$check_rec" == "" ]]; then
-      break
-    fi
-  done
   
   stage "4" "执行破解"
-  echo "正在执行破解……"
   echo "预计需要1分钟"
-  echo "Checking Crack Applied" >> log
-  sleep 3
-  while true
-  do
-    sleep 0.1
-    check_unauth=$(echo `adb devices` | grep "unauthorized")
-    check_dev=$(echo `adb devices` | grep -o "device" | wc -l)
-    if [[ "$check_unauth" != "" ]]; then
-      echo "出现错误，10秒后请重新尝试"
-      echo "Error: unauthorized device"
-      echo `adb devices` >> log
-      sleep 10
-      main
-    elif [[ "$check_dev" == "2" ]]; then
-      break
-    fi
-  done
+  echo ""
+  pause "显示进度条时按任意键继续"
   
   enable_adb
   
