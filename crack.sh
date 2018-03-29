@@ -132,7 +132,7 @@ function main()
   while true
   do
     sleep 0.1
-    check_rec=$(echo `adb devices` | grep "dev")
+    check_rec=$(echo `adb devices` | grep "recovery")
     if [[ "$check_rec" != "" ]]; then
       break
     fi
