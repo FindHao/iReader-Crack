@@ -1,7 +1,8 @@
 #!/bin/bash
 
 mv log log.last
-version="r3"
+version="r4"
+home=`pwd`
 
 function pause()
 {
@@ -65,8 +66,8 @@ function check_env()
 function recovery()
 {
   echo "Copying Recovery Shell Files" >> log
-  adb push crack/bin /system/bin/ >> log
-  adb push crack/lib /system/lib/ >> log
+  adb push $home/crack/bin /system/bin/ >> log
+  adb push $home/crack/lib /system/lib/ >> log
   adb shell "/system/bin/mount -t ext4 /dev/block/mmcblk0p5 /system" >> log
   adb shell "echo 'persist.service.adb.enable=1' >> /system/build.prop" >> log
   adb shell "echo 'persist.service.debuggable=1' >> /system/build.prop" >> log
@@ -131,7 +132,7 @@ function main()
   while true
   do
     sleep 0.1
-    check_rec=$(echo `adb devices` | grep "recovery")
+    check_rec=$(echo `adb devices` | grep "dev")
     if [[ "$check_rec" != "" ]]; then
       break
     fi
