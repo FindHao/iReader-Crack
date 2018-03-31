@@ -74,7 +74,7 @@ function adb_state()
 {
   # offline:0 device:1 recovery:2
   state=$(echo `adb get-state`)
-  if [[ $state == "device" ]]: then
+  if [[ $state == "device" ]]; then
     return 1
   elif [[ $state == "recovery" ]]; then
     return 2
