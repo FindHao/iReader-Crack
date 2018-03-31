@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mv log log.last
-version="r8"
+version="r9"
 home=$(cd `dirname $0`; pwd)
 logging=1
 
@@ -34,7 +34,9 @@ function init_adb()
   if [ $WSL -ge "1" ]; then
     log "WSL Subsystem"
     echo "检测到使用 Windows 10 Linux 子系统"
-    echo "请安装 Windows 的 adb 驱动，打开 adb 程序"
+    echo "请安装 Windows 的 adb 驱动，打开对应版本的 adb 程序"
+    echo "版本如下:"
+    adb version
     echo "Windows中命令行操作如下:"
     echo "adb kill-server"
     echo "adb start-server"
@@ -166,7 +168,7 @@ function main()
   
   echo ""
   adb_state
-  if [[ "$?" == "1" ]]; then
+  if [[ "$(echo `adb get-state`)" == "device" ]]; then
     echo "破解成功，现可以通过adb安装程序"
     log "Done"
   else
