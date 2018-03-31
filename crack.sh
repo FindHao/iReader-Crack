@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mv log log.last
-version="r7"
+version="r8"
 home=$(cd `dirname $0`; pwd)
 logging=1
 
@@ -72,8 +72,15 @@ function check_env()
 
 function adb_state()
 {
+  # offline:0 device:1 recovery:2
   state=$(echo `adb get-state`)
-  return $state
+  if [[ $state == "device" ]]: then
+    return 1
+  elif [[ $state == "recovery" ]]; then
+    return 2
+  else
+    return 0
+  fi
 }
 
 function recovery()
@@ -159,7 +166,7 @@ function main()
   
   echo ""
   adb_state
-  if [[ "$?" == "device" ]]; then
+  if [[ "$?" == "1" ]]; then
     echo "破解成功，现可以通过adb安装程序"
     log "Done"
   else
