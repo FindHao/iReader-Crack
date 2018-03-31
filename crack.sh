@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mv log log.last
-version="r6"
+version="r7"
 home=$(cd `dirname $0`; pwd)
 logging=1
 
@@ -16,7 +16,7 @@ function pause()
 
 function log()
 {
-  if [[ $logging == "1" ]]; then
+  if [ $logging ]; then
     echo "$1" >> log
   fi
 }
@@ -30,9 +30,22 @@ function stage()
 
 function init_adb()
 {
-  log "Initializing adb"
-  adb kill-server
-  adb start-server
+  WSL=$(echo `uname -a` | grep -o "Microsoft" | wc -l)
+  if [ $WSL -ge "1" ]; then
+    log "WSL Subsystem"
+    echo "检测到使用 Windows 10 Linux 子系统"
+    echo "请安装 Windows 的 adb 驱动，打开 adb 程序"
+    echo "Windows中命令行操作如下:"
+    echo "adb kill-server"
+    echo "adb start-server"
+    pause "完成后不要关闭Windows的adb，按任意键继续"
+    adb device
+  else
+    echo "初始化adb……"
+    log "Initializing adb"
+    adb kill-server
+    adb start-server
+  fi
 }
 
 function check_env()
@@ -40,7 +53,7 @@ function check_env()
   echo "正在检测环境……"
   issue=`cat /etc/issue`
   adb_exec=`which adb`
-  if [[ ${issue:0:6} != "Ubuntu" ]]; then
+  if [[ ${issue:0:6} != "Ubuntu" ]];  then
     echo "当前使用的系统不是Ubuntu，可能不受支持"
     log "Not Ubuntu"
     pause
@@ -55,20 +68,12 @@ function check_env()
   fi
   
   echo ""
-  
-  WSL=$(echo `uname -a` | grep -o "Microsoft" | wc -l)
-  if [[ $WSL != "0" ]]; then
-    log "IS WSL Subsystem"
-    echo "检测到使用 Windows 10 Linux 子系统"
-    echo "请安装 Windows 的 adb 驱动，打开 adb 程序"
-    echo "Windows中命令行操作如下:"
-    echo "adb kill-server"
-    echo "adb start-server"
-    pause "完成后不要关闭Windows的adb，按任意键继续"
-  else
-    echo "初始化adb……"
-    init_adb
-  fi
+}
+
+function adb_state()
+{
+  state=$(echo `adb get-state`)
+  return $state
 }
 
 function recovery()
@@ -122,6 +127,7 @@ function main()
   
   stage "2" "环境检测"
   check_env
+  init_adb
   sleep 1
   
   stage "3" "进入Recovery"
@@ -152,8 +158,8 @@ function main()
   pause "重启进阅读器界面后按任意键继续"
   
   echo ""
-  check_dev=$(echo `adb devices` | grep -o "device" | wc -l)
-  if [[ "$check_dev" == "2" ]]; then
+  adb_state
+  if [[ "$?" == "device" ]]; then
     echo "破解成功，现可以通过adb安装程序"
     log "Done"
   else

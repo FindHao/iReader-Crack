@@ -16,6 +16,7 @@ git clone https://github.com/KazushiMe/iReader-Crack.git
 2. 按程序提示操作
 
 3. 完成后可以……
+
 [开启root](https://www.einkfans.com/thread-48.htm)   [安装Xposed框架](https://www.einkfans.com/thread-51.htm)
 
 ## 原理
@@ -23,3 +24,10 @@ git clone https://github.com/KazushiMe/iReader-Crack.git
 iReader官方请的工程师，连Recovery的adb都忘关了……
 
 清空数据进入Recovery➡加入adb（改build.prop）➡强制开启adb（否则会被阅读器主程序关闭）
+
+## 计划
+
+1. 完善自动判断逻辑
+2. 加入破解后的操作(root/xposed等)
+3. 修改OTA包实现升级
+4. Windows移植
