@@ -1,8 +1,9 @@
 #!/bin/bash
 
 mv log log.last
-version="r5"
+version="r6"
 home=$(cd `dirname $0`; pwd)
+logging=1
 
 function pause()
 {
@@ -13,16 +14,23 @@ function pause()
   fi
 }
 
+function log()
+{
+  if [[ $logging == "1" ]]; then
+    echo "$1" >> log
+  fi
+}
+
 function stage()
 {
   echo ""
   echo "第 $1 阶段: $2"
-  echo "Stage $1" >> log 
+  log "Stage $1"
 }
 
 function init_adb()
 {
-  echo "Initializing adb" >> log
+  log "Initializing adb"
   adb kill-server
   adb start-server
 }
@@ -34,13 +42,13 @@ function check_env()
   adb_exec=`which adb`
   if [[ ${issue:0:6} != "Ubuntu" ]]; then
     echo "当前使用的系统不是Ubuntu，可能不受支持"
-    echo "Not Ubuntu" >> log
+    log "Not Ubuntu"
     pause
   elif [[ ${adb_exec:0:1} != "/" ]]; then
     echo "未检测到adb程序"
-    echo "adb Not Found" >> log
+    log "adb Not Found"
     pause "按任意键执行安装，可能需要输入密码"
-    echo "adb Installing" >> log
+    log "adb Installing"
     sudo apt-get update
     sudo apt-get install adb
     check_env
@@ -49,8 +57,8 @@ function check_env()
   echo ""
   
   WSL=$(echo `uname -a` | grep -o "Microsoft" | wc -l)
-  if [[ $WSL != "" ]]; then
-    echo "IS WSL Subsystem" >> log
+  if [[ $WSL != "0" ]]; then
+    log "IS WSL Subsystem"
     echo "检测到使用 Windows 10 Linux 子系统"
     echo "请安装 Windows 的 adb 驱动，打开 adb 程序"
     echo "Windows中命令行操作如下:"
@@ -65,7 +73,7 @@ function check_env()
 
 function recovery()
 {
-  echo "Copying Recovery Shell Files" >> log
+  log "Copying Recovery Shell Files"
   adb push $home/crack/bin /system/bin/
   adb push $home/crack/lib /system/lib/
   adb shell "/system/bin/mount -t ext4 /dev/block/mmcblk0p5 /system"
@@ -79,7 +87,7 @@ function recovery()
 
 function enable_adb()
 {
-  echo "Enabling Adb During Booting" >> log
+  log "Enabling Adb During Booting"
   start=`date +%s`
   while true
   do
@@ -108,9 +116,8 @@ function main()
   echo "3. 本程序仅在Ubuntu测试通过，其他系统未测试"
   echo "4. 操作前备份好用户数据(电纸书)"
   echo "5. 破解前移除其他所有Android设备"
-  echo "6. 如破解过程中已进入阅读器主界面但程序未响应，请强制关闭后再次尝试或进行反馈"
   echo ""
-  sleep 3
+  sleep 1
   pause
   
   stage "2" "环境检测"
@@ -130,7 +137,7 @@ function main()
   recovery
   
   echo "等待重启……"
-  echo "Waiting for Reboot" >> log
+  log "Waiting for Reboot"
   
   stage "4" "执行破解"
   echo "预计需要1分钟"
@@ -141,17 +148,17 @@ function main()
   
   echo ""
   echo "请手动重启阅读器"
-  echo "Waiting for Reboot Manually" >> log
+  log "Waiting for Reboot Manually"
   pause "重启进阅读器界面后按任意键继续"
   
   echo ""
   check_dev=$(echo `adb devices` | grep -o "device" | wc -l)
   if [[ "$check_dev" == "2" ]]; then
     echo "破解成功，现可以通过adb安装程序"
-    echo "Done" >> log
+    log "Done"
   else
     echo "破解失败，请尝试重新破解或进行反馈"
-    echo "Failed" >> log
+    log "Failed"
   fi
   pause "按任意键退出"
 }
