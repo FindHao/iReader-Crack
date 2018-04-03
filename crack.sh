@@ -1,13 +1,17 @@
 #!/bin/bash
 
-mv log log.last
-version="r9"
+version="r10"
 home=$(cd `dirname $0`; pwd)
-logging=1
+chmod -R 777 $home
+mv $home/log $home/log.last
+
+if [[ $1 == "-debug" ]]; then
+  logging=1
+fi
 
 function pause()
 {
-  if [ $1 ];then
+  if [ $1 ]; then
     read -n 1 -p "$1"
   else
     read -n 1 -p "按任意键继续"
@@ -17,7 +21,7 @@ function pause()
 function log()
 {
   if [ $logging ]; then
-    echo "$1" >> log
+    echo "$1" >> $home/log
   fi
 }
 
@@ -41,7 +45,6 @@ function init_adb()
     echo "adb kill-server"
     echo "adb start-server"
     pause "完成后不要关闭Windows的adb，按任意键继续"
-    adb device
   else
     echo "初始化adb……"
     log "Initializing adb"
@@ -134,7 +137,11 @@ function main()
   sleep 1
   pause
   
-  stage "2" "环境检测"
+  stage "2" "环境检测与准备"
+  echo ""
+  echo "正在检测更新……"
+  cd $home
+  git pull
   check_env
   init_adb
   sleep 1

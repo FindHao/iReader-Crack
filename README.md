@@ -19,6 +19,10 @@ git clone https://github.com/KazushiMe/iReader-Crack.git
 
 [开启root](https://www.einkfans.com/thread-48.htm)   [安装Xposed框架](https://www.einkfans.com/thread-51.htm)
 
+### 视频
+
+[iReader阅读器开启adb教程](https://www.bilibili.com/video/av21532543/)  by 愿乘风归去
+
 ## 原理
 
 iReader官方请的工程师，连Recovery的adb都忘关了……
