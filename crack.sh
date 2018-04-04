@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r11"
+version="r12"
 
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
@@ -125,6 +125,21 @@ function enable_adb()
   #主程序会关闭adb，不得不循环破解
 }
 
+function enable_adb_2()
+{
+  log "Enabling Adb During Booting - Alternative Approach"
+  while true
+  do
+    adb shell "echo 'mtp,adb' > /data/property/persist.sys.usb.config" > /dev/null
+    adb shell "echo '1' > /data/property/persist.service.adb.enable" > /dev/null
+    adb_state
+    if [[ $1 == 0 ]]; then
+      break
+    fi
+  done
+  #主程序会关闭adb，不得不循环破解
+}
+
 function update()
 {
   echo ""
@@ -148,6 +163,9 @@ function main()
   [[ $logging != 1 ]] && echo "            2. 开启 debug 模式"
   echo "            3. 更新工具箱"
   echo ""
+  echo "            测试功能："
+  echo "            4. 运行破解主程序（自动版）"
+  echo ""
   echo "            0. 退出"
   echo ""
 
@@ -158,6 +176,7 @@ function crack()
 {
   clear
   
+  log "Version: "$version
   echo "       iReader Light/Ocean 阅读器 破解"
   echo "             for Linux(Ubuntu)"
   stage "1" "使用前须知"
@@ -214,7 +233,94 @@ function crack()
   
   echo ""
   adb_state
-  if [[ "$(echo `adb get-state`)" == "device" ]]; then
+  if [[ $? == "device" ]]; then
+    echo "破解成功，现可以通过adb安装程序"
+    log "Done"
+  else
+    echo "破解失败，请尝试重新破解或进行反馈"
+    log "Failed"
+    log `adb devices`
+  fi
+  pause "按任意键返回"
+  main
+}
+
+function crack_auto()
+{
+  clear
+  
+  log "Version: "$version" Auto Approach"
+  echo " iReader Light/Ocean 阅读器 破解 自动版（测试）"
+  echo "             for Linux(Ubuntu)"
+  stage "1" "使用前须知"
+  
+  echo "注意事项:"
+  echo "1. 请确保安装好相关组件，包括adb及adb驱动"
+  echo "2. 请严格按照程序提示操作，否则有可能变砖"
+  echo "3. 操作前备份好用户数据(电纸书)"
+  echo ""
+  sleep 3
+  
+  stage "2" "环境检测与准备"
+  check_env
+  init_adb
+  adb_state
+  if [[ $? != 0 ]]; then
+    echo ""
+    echo "已连接开启USB调试的Android设备，请移除后重试"
+    log "Already connected adb device"
+    log `adb devices`
+    pause
+    crack
+  fi
+  sleep 1
+  
+  stage "3" "进入Recovery"
+  echo "请按如下步骤操作："
+  echo "1. 将iReader用数据线连接至电脑"
+  echo "2. 阅读器上 选择 设置-->关于本机-->恢复出厂设置"
+  echo "3. 等待出现机器人标识"
+  echo ""
+  echo "正在检测是否进入Recovery……"
+  log "Checking Recovery"
+  while true
+  do
+    sleep 0.1
+    adb_state
+    if [[ $? == 2 ]]; then
+      break;
+    fi
+  done
+  
+  echo ""
+  echo "正在复制破解文件……"
+  recovery
+  
+  echo "等待重启……"
+  log "Waiting for Reboot"
+  
+  stage "4" "执行破解"
+  echo "等待出现进度条……"
+  sleep 5
+  while true
+  do
+    sleep 0.1
+    adb_state
+    if [[ $1 == 1 ]]; then
+      break;
+    fi
+  done
+  
+  enable_adb_2
+  
+  echo ""
+  echo "请手动重启阅读器"
+  log "Waiting for Reboot Manually"
+  pause "重启进阅读器界面后按任意键继续"
+  
+  echo ""
+  adb_state
+  if [[ $? == "device" ]]; then
     echo "破解成功，现可以通过adb安装程序"
     log "Done"
   else
@@ -243,6 +349,9 @@ do
     ;;
     3)
     update
+    ;;
+    4)
+    crack_auto
     ;;
     *)
     echo "输入错误，请重新尝试"
