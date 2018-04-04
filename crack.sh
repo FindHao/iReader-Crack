@@ -1,6 +1,7 @@
 #!/bin/bash
 
-version="r10"
+version="r11"
+
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
 mv $home/log $home/log.last
@@ -21,7 +22,13 @@ function pause()
 function log()
 {
   if [ $logging ]; then
-    echo "$1" >> $home/log
+    time=`date "+%Y-%m-%d %H:%M:%S"`
+    #8进制识别fix: 10#string
+    time_ns=$((10#`date "+%N"`))
+    time_us=$((10#$time_ns / 1000))
+    time_us_formatted=" "`printf "%06d\n" $time_us`"us"
+    time_formatted=${time}${time_us_formatted}
+    echo "$time_formatted    $*" >> $home/log
   fi
 }
 
@@ -29,22 +36,22 @@ function stage()
 {
   echo ""
   echo "第 $1 阶段: $2"
-  log "Stage $1"
+  log "========== Stage $1 =========="
 }
 
 function init_adb()
 {
   WSL=$(echo `uname -a` | grep -o "Microsoft" | wc -l)
   if [ $WSL -ge "1" ]; then
-    log "WSL Subsystem"
+    log "IS WSL Subsystem"
     echo "检测到使用 Windows 10 Linux 子系统"
     echo "请安装 Windows 的 adb 驱动，打开对应版本的 adb 程序"
-    echo "版本如下:"
-    adb version
+    echo "所需adb版本: " `adb version | head -1`
     echo "Windows中命令行操作如下:"
     echo "adb kill-server"
     echo "adb start-server"
     pause "完成后不要关闭Windows的adb，按任意键继续"
+    adb start-server
   else
     echo "初始化adb……"
     log "Initializing adb"
@@ -77,8 +84,8 @@ function check_env()
 
 function adb_state()
 {
-  # offline:0 device:1 recovery:2
-  state=$(echo `adb get-state`)
+  # unknown:0 device:1 recovery:2
+  state=`adb get-state`
   if [[ $state == "device" ]]; then
     return 1
   elif [[ $state == "recovery" ]]; then
@@ -118,32 +125,64 @@ function enable_adb()
   #主程序会关闭adb，不得不循环破解
 }
 
+function update()
+{
+  echo ""
+  echo "正在检测更新……"
+  cd $home
+  git pull
+  sleep 3
+  main
+}
+
 function main()
+{
+  clear
+  key=
+  echo "           iReader Crack 工具箱"
+  echo "             for Linux(Ubuntu)"
+  echo "                    $version"
+  [[ $logging == 1 ]] && echo "               debug 已开启"
+  echo ""
+  echo "            1. 运行破解主程序"
+  [[ $logging != 1 ]] && echo "            2. 开启 debug 模式"
+  echo "            3. 更新工具箱"
+  echo ""
+  echo "            0. 退出"
+  echo ""
+
+  read -n 1 -p "请键入选项: " key
+}
+
+function crack()
 {
   clear
   
   echo "       iReader Light/Ocean 阅读器 破解"
   echo "             for Linux(Ubuntu)"
-  echo "                     $version"
   stage "1" "使用前须知"
   
   echo "注意事项:"
   echo "1. 请确保安装好相关组件，包括adb及adb驱动"
   echo "2. 请严格按照程序提示操作，否则有可能变砖"
-  echo "3. 本程序仅在Ubuntu测试通过，其他系统未测试"
-  echo "4. 操作前备份好用户数据(电纸书)"
-  echo "5. 破解前移除其他所有Android设备"
+  echo "3. 操作前备份好用户数据(电纸书)"
   echo ""
   sleep 1
   pause
+  log "Agreed"
   
   stage "2" "环境检测与准备"
-  echo ""
-  echo "正在检测更新……"
-  cd $home
-  git pull
   check_env
   init_adb
+  adb_state
+  if [[ $? != 0 ]]; then
+    echo ""
+    echo "已连接开启USB调试的Android设备，请移除后重试"
+    log "Already connected adb device"
+    log `adb devices`
+    pause
+    crack
+  fi
   sleep 1
   
   stage "3" "进入Recovery"
@@ -181,8 +220,33 @@ function main()
   else
     echo "破解失败，请尝试重新破解或进行反馈"
     log "Failed"
+    log `adb devices`
   fi
-  pause "按任意键退出"
+  pause "按任意键返回"
+  main
 }
 
 main
+while true
+do
+  case $key in
+    0)
+    clear
+    exit
+    ;;
+    1)
+    crack
+    ;;
+    2)
+    $home/crack.sh -debug
+    exit
+    ;;
+    3)
+    update
+    ;;
+    *)
+    echo "输入错误，请重新尝试"
+    sleep 1
+    main;;
+  esac
+done
