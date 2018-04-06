@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r13"
+version="r14"
 
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
@@ -52,13 +52,12 @@ function init_adb()
     echo "adb kill-server"
     echo "adb start-server"
     pause "完成后不要关闭Windows的adb，按任意键继续"
-    adb start-server
   else
     echo "初始化adb……"
     log "Initializing adb"
     adb kill-server
-    adb start-server
   fi
+  adb start-server
 }
 
 function check_env()
@@ -66,18 +65,26 @@ function check_env()
   echo "正在检测环境……"
   issue=`cat /etc/issue`
   adb_exec=`which adb`
-  if [[ ${issue:0:6} != "Ubuntu" ]];  then
+  if [[ ${issue:0:6} != "Ubuntu" ]]; then
     echo "当前使用的系统不是Ubuntu，可能不受支持"
     log "Not Ubuntu"
     pause
-  elif [[ ${adb_exec:0:1} != "/" ]]; then
+  fi
+  if [[ ${adb_exec:0:1} != "/" ]]; then
     echo "未检测到adb程序"
     log "adb Not Found"
-    pause "按任意键执行安装，可能需要输入密码"
-    log "adb Installing"
-    sudo apt-get update
-    sudo apt-get install adb
-    check_env
+    if [[ ${issue:0:6} == "Ubuntu" ]]; then
+      pause "按任意键执行安装，可能需要输入密码"
+      log "adb Installing"
+      sudo apt-get update
+      sudo apt-get install adb
+      check_env
+    else
+      echo "请安装adb后再执行本程序"
+      pause "按任意键退出"
+      log "Need adb, exit"
+      exit
+    fi
   fi
   
   echo ""
@@ -148,7 +155,7 @@ function update()
   cd $home
   git pull
   sleep 3
-  main
+  return
 }
 
 function main()
@@ -156,9 +163,14 @@ function main()
   clear
   key=
   echo "           iReader Crack 工具箱"
-  echo "             for Linux(Ubuntu)"
   echo "                    $version"
   [[ $logging == 1 ]] && echo "               debug 已开启"
+  adb_state
+  if [[ $? == 1 ]]; then
+    echo "              USB调试已连接"
+  elif [[ $? == 2 ]]; then
+    echo "           已进入Recovery模式"
+  fi
   echo ""
   echo "            1. 运行破解主程序"
   [[ $logging != 1 ]] && echo "            2. 开启 debug 模式"
@@ -166,6 +178,7 @@ function main()
   echo ""
   echo "            测试功能："
   echo "            4. 运行破解主程序（自动版）"
+  echo "            5. 安装更新包（需修改）"
   echo ""
   echo "            0. 退出"
   echo ""
@@ -179,7 +192,6 @@ function crack()
   
   log "Version: "$version
   echo "       iReader Light/Ocean 阅读器 破解"
-  echo "             for Linux(Ubuntu)"
   stage "1" "使用前须知"
   
   echo "注意事项:"
@@ -192,8 +204,6 @@ function crack()
   log "Agreed"
   
   stage "2" "环境检测与准备"
-  check_env
-  init_adb
   adb_state
   if [[ $? != 0 ]]; then
     echo ""
@@ -243,7 +253,7 @@ function crack()
     log `adb devices`
   fi
   pause "按任意键返回"
-  main
+  return
 }
 
 function crack_auto()
@@ -252,7 +262,6 @@ function crack_auto()
   
   log "Version: "$version" Auto Approach"
   echo " iReader Light/Ocean 阅读器 破解 自动版（测试）"
-  echo "             for Linux(Ubuntu)"
   stage "1" "使用前须知"
   
   echo "注意事项:"
@@ -263,8 +272,6 @@ function crack_auto()
   sleep 3
   
   stage "2" "环境检测与准备"
-  check_env
-  init_adb
   adb_state
   if [[ $? != 0 ]]; then
     echo ""
@@ -330,12 +337,67 @@ function crack_auto()
     log `adb devices`
   fi
   pause "按任意键返回"
-  main
+  return
 }
 
-main
+function install_ota()
+{
+  echo ""
+  stage "1" "准备阶段"
+  adb get-state
+  adb_state
+  if [[ $? == 0 ]]; then
+    echo "未破解或未连接"
+    pause "按任意键返回"
+    return
+  fi
+  echo "请按照教程获取OTA更新包并进行修改"
+  echo "将修改后的更新包放入 $home 文件夹内，重命名为update.zip"
+  pause
+  if [ ! -f "$home/update.zip" ]; then
+    echo ""
+    echo "更新包不存在"
+    pause "按任意键重试"
+    install_ota
+  fi
+  stage "2" "安装更新"
+  if [[ $? == 1 ]]; then
+    echo "正在进入Recovery环境"
+    adb reboot recovery
+    sleep 5
+    while true
+    do
+      sleep 0.1
+      adb_state
+      if [[ $? == 2 ]]; then
+        break;
+      fi
+    done
+  fi
+  recovery
+  adb shell "/system/bin/mount -t ext4 /dev/block/mmcblk0p6 /cache"
+  echo ""
+  echo "正在复制OTA更新包"
+  adb push $home/update.zip /cache/update.zip
+  echo ""
+  echo "正在安装更新"
+  adb shell "/system/bin/recovery --update_package=/cache/update.zip"
+  sleep 5
+  adb_state
+  if [[ $? != 2 ]]; then
+    echo "更新成功"
+  else
+    echo "更新失败，请重新尝试"
+  fi
+  pause "按任意键返回"
+  return
+}
+
+check_env
+init_adb
 while true
 do
+  main
   case $key in
     0)
     clear
@@ -354,9 +416,13 @@ do
     4)
     crack_auto
     ;;
+    5)
+    install_ota
+    ;;
     *)
+    echo ""
     echo "输入错误，请重新尝试"
     sleep 1
-    main;;
+    ;;
   esac
 done
