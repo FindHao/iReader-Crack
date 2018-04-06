@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r12"
+version="r13"
 
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
@@ -28,8 +28,9 @@ function log()
     time_us=$((10#$time_ns / 1000))
     time_us_formatted=" "`printf "%06d\n" $time_us`"us"
     time_formatted=${time}${time_us_formatted}
-    echo "$time_formatted    $*" >> $home/log
+    echo "$time_formatted  $*"
   fi
+  echo "$time_formatted    $*" >> $home/log
 }
 
 function stage()
@@ -233,7 +234,7 @@ function crack()
   
   echo ""
   adb_state
-  if [[ $? == "device" ]]; then
+  if [[ $? == 1 ]]; then
     echo "破解成功，现可以通过adb安装程序"
     log "Done"
   else
@@ -306,7 +307,7 @@ function crack_auto()
   do
     sleep 0.1
     adb_state
-    if [[ $1 == 1 ]]; then
+    if [[ $? == 1 ]]; then
       break;
     fi
   done
@@ -320,7 +321,7 @@ function crack_auto()
   
   echo ""
   adb_state
-  if [[ $? == "device" ]]; then
+  if [[ $? == 1 ]]; then
     echo "破解成功，现可以通过adb安装程序"
     log "Done"
   else
