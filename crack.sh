@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r14"
+version="r15"
 
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
@@ -58,6 +58,7 @@ function init_adb()
     adb kill-server
   fi
   adb start-server
+  sleep 1
 }
 
 function check_env()
@@ -179,6 +180,9 @@ function main()
   echo "            测试功能："
   echo "            4. 运行破解主程序（自动版）"
   echo "            5. 安装更新包（需修改）"
+  echo "            6. 批量安装程序"
+  echo ""
+  echo "   A. 打开设置  B. 模拟返回键  C. 模拟主页键"
   echo ""
   echo "            0. 退出"
   echo ""
@@ -279,7 +283,7 @@ function crack_auto()
     log "Already connected adb device"
     log `adb devices`
     pause
-    crack
+    crack_auto
   fi
   sleep 1
   
@@ -344,7 +348,6 @@ function install_ota()
 {
   echo ""
   stage "1" "准备阶段"
-  adb get-state
   adb_state
   if [[ $? == 0 ]]; then
     echo "未破解或未连接"
@@ -393,32 +396,69 @@ function install_ota()
   return
 }
 
+function install_apk()
+{
+  echo ""
+  echo "请稍后……"
+  adb_state
+  if [[ $? != 1 ]]; then
+    echo "未破解或未连接"
+    pause "按任意键返回"
+    return
+  fi
+  echo ""
+  if [ ! -d "$home/apk" ]; then
+    mkdir "$home/apk"
+  fi
+  echo "将需要安装的apk文件放入 $home/apk 中"
+  echo "建议使用英文命名"
+  pause
+  echo ""
+  echo "正在安装……"
+  cd "$home/apk"
+  adb install *.apk
+  echo "安装完成"
+  return
+}
+
+function shortcut()
+{
+  echo ""
+  echo "请稍后……"
+  adb_state
+  if [[ $? != 1 ]]; then
+    echo "未破解或未连接"
+    pause "按任意键返回"
+    return
+  fi
+  echo ""
+  if [[ $1 == "setting" ]]; then
+    adb shell am start com.android.settings/com.android.settings.Settings
+  elif [[ $1 == "back" ]]; then
+    adb shell input keyevent 4
+  elif [[ $1 == "home" ]]; then
+    adb shell input keyevent 3
+  fi
+  echo "完成"
+  return
+}
+
 check_env
 init_adb
 while true
 do
   main
   case $key in
-    0)
-    clear
-    exit
-    ;;
-    1)
-    crack
-    ;;
-    2)
-    $home/crack.sh -debug
-    exit
-    ;;
-    3)
-    update
-    ;;
-    4)
-    crack_auto
-    ;;
-    5)
-    install_ota
-    ;;
+    0)      clear; exit;;
+    1)      crack;;
+    2)      $home/crack.sh -debug; exit;;
+    3)      update;;
+    4)      crack_auto;;
+    5)      install_ota;;
+    6)      install_apk;;
+    a|A)    shortcut "setting";;
+    b|B)    shortcut "back";;
+    c|C)    shortcut "home";;
     *)
     echo ""
     echo "输入错误，请重新尝试"
