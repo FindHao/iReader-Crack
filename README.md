@@ -1,10 +1,12 @@
 # iReader-Crack
 
-iReader Light 与 Ocean 阅读器破解，截至目前支持到0042版系统
+iReader Plus、Light 与 Ocean 阅读器破解，支持最新系统（截至4月初）
 
-理论上Plus也支持，但建议降级
+Plus建议降级以使用蓝牙听书功能：[教程](https://www.einkfans.com/thread-60.htm)
 
 目前支持Linux系统进行破解，推荐Ubuntu，支持Windows 10 Linux子系统
+
+Windows 自动方案即将上线，仅支持 Windows 10 RS3 及以上版本
 
 ## 使用方法
 
@@ -23,7 +25,7 @@ git clone https://github.com/KazushiMe/iReader-Crack.git
 
 [安装Xposed框架](https://www.einkfans.com/thread-51.htm)
 
-### 更新包修改
+### 更新或恢复
 
 1.	获取官方OTA（在系统更新下载，不要安装），解压得到update.zip
 
