@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r15"
+version="r16"
 
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
@@ -155,8 +155,10 @@ function update()
   echo "正在检测更新……"
   cd $home
   git pull
+  echo ""
+  echo "更新完成"
   sleep 3
-  return
+  $home/crack.sh;exit
 }
 
 function main()
@@ -177,10 +179,11 @@ function main()
   [[ $logging != 1 ]] && echo "            2. 开启 debug 模式"
   echo "            3. 更新工具箱"
   echo ""
-  echo "            测试功能："
   echo "            4. 运行破解主程序（自动版）"
   echo "            5. 安装更新包（需修改）"
   echo "            6. 批量安装程序"
+  echo ""
+  echo "            7. 安装root与Superuser"
   echo ""
   echo "   A. 打开设置  B. 模拟返回键  C. 模拟主页键"
   echo ""
@@ -360,8 +363,8 @@ function install_ota()
   if [ ! -f "$home/update.zip" ]; then
     echo ""
     echo "更新包不存在"
-    pause "按任意键重试"
-    install_ota
+    pause "按任意键返回"
+    return
   fi
   stage "2" "安装更新"
   if [[ $? == 1 ]]; then
@@ -410,14 +413,63 @@ function install_apk()
   if [ ! -d "$home/apk" ]; then
     mkdir "$home/apk"
   fi
-  echo "将需要安装的apk文件放入 $home/apk 中"
+  echo "将需要安装的apk文件放入 $home/apk/ 文件夹中"
   echo "建议使用英文命名"
-  pause
+  pause "按任意键开始安装"
+  if [ ! -f "$home/apk/*.apk" ]; then
+    echo ""
+    echo "没有找到apk"
+    pause "按任意键返回"
+    return
+  fi
   echo ""
   echo "正在安装……"
   cd "$home/apk"
   adb install *.apk
   echo "安装完成"
+  return
+}
+
+function install_root()
+{
+  echo ""
+  echo "请稍后……"
+  adb_state
+  if [[ $? != 1 ]]; then
+    echo "未破解或未连接"
+    pause "按任意键返回"
+    return
+  fi
+  echo ""
+  if [ ! -d "$home/apk" ]; then
+    mkdir "$home/apk"
+  fi
+  echo "将SuperSU授权管理的apk文件放入 $home/apk/ 文件夹中，命名为 Superuser.apk"
+  echo "可从群文件获取SuperSU"
+  pause "按任意键开始执行root"
+  if [ ! -f "$home/apk/Superuser.apk" ]; then
+    echo ""
+    echo "没有找到SuperSU"
+    pause "按任意键返回"
+    return
+  fi
+  echo ""
+  echo "正在执行root……"
+  adb shell mount -o rw,remount /system
+  adb push $home/crack/bin/su /system/xbin
+  adb push $home/crack/bin/su /system/bin
+  adb push $home/apk/Superuser.apk /system/app/
+  adb shell chown 0.0 /system/xbin/su
+  adb shell chmod 6755 /system/xbin/su
+  adb shell chown 0.0 /system/bin/su
+  adb shell chmod 6755 /system/bin/su
+  adb shell su -d am start -a android.intent.action.MAIN -n eu.chainfire.supersu/.MainActivity
+  echo ""
+  echo "阅读器上选择：更新二进制文件-->常规方式-->重启"
+  sleep 3
+  echo ""
+  echo "重启后请检测root是否成功"
+  pause "按任意键返回"
   return
 }
 
@@ -443,6 +495,7 @@ function shortcut()
   return
 }
 
+clear
 check_env
 init_adb
 while true
@@ -456,6 +509,7 @@ do
     4)      crack_auto;;
     5)      install_ota;;
     6)      install_apk;;
+    7)      install_root;;
     a|A)    shortcut "setting";;
     b|B)    shortcut "back";;
     c|C)    shortcut "home";;

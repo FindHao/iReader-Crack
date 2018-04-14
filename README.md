@@ -1,12 +1,14 @@
+** 本工具箱已停止功能性更新，仅修复bug **
+
 # iReader-Crack
 
 iReader Plus、Light 与 Ocean 阅读器破解，支持最新系统（截至4月初）
 
 Plus建议降级以使用蓝牙听书功能：[教程](https://www.einkfans.com/thread-60.htm)
 
-目前支持Linux系统进行破解，推荐Ubuntu，支持Windows 10 Linux子系统
+目前支持Linux系统进行破解，推荐Ubuntu，支持Windows 10 Linux子系统。
 
-Windows 自动方案即将上线，仅支持 Windows 10 RS3 及以上版本
+Windows 自动方案即将上线，仅支持 Windows 10 RS3 及以上版本，详细信息请关注论坛。
 
 ## 使用方法
 
@@ -21,9 +23,9 @@ git clone https://github.com/KazushiMe/iReader-Crack.git
 
 3. 完成后可以……
 
-[开启root](https://www.einkfans.com/thread-48.htm)
+安装程序、设置主屏幕
 
-[安装Xposed框架](https://www.einkfans.com/thread-51.htm)
+开启root后[安装Xposed框架](https://www.einkfans.com/thread-51.htm)
 
 ### 更新或恢复
 
@@ -55,8 +57,3 @@ git clone https://github.com/KazushiMe/iReader-Crack.git
 iReader官方请的工程师，连Recovery的adb都忘关了……
 
 清空数据进入Recovery➡加入adb（改build.prop）➡强制开启adb（否则会被阅读器主程序关闭）
-
-## 计划
-
-1. 加入破解后的操作(root/xposed等)
-2. Windows移植
