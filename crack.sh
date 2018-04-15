@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="r16"
+version="r17"
 
 home=$(cd `dirname $0`; pwd)
 chmod -R 777 $home
@@ -59,6 +59,13 @@ function init_adb()
   fi
   adb start-server
   sleep 1
+  adb_check=`adb get-state`
+  if [[ ${adb_check:0:5} != "error" ]]; then
+    echo "加载adb失败，请检查adb驱动及服务"
+    log "Init Adb Failed"
+    pause "按任意键退出"
+    exit
+  fi
 }
 
 function check_env()
@@ -175,19 +182,23 @@ function main()
     echo "           已进入Recovery模式"
   fi
   echo ""
-  echo "            1. 运行破解主程序"
-  [[ $logging != 1 ]] && echo "            2. 开启 debug 模式"
-  echo "            3. 更新工具箱"
+  echo "            1. 运行破解主程序（自动版）"
   echo ""
-  echo "            4. 运行破解主程序（自动版）"
-  echo "            5. 安装更新包（需修改）"
-  echo "            6. 批量安装程序"
+  echo "            2. 运行破解主程序（手动版）"
   echo ""
-  echo "            7. 安装root与Superuser"
+  echo "            3. 安装更新包（需修改）"
+  echo ""
+  echo "            4. 批量安装程序"
+  echo ""
+  echo "            5. 安装root与Superuser"
   echo ""
   echo "   A. 打开设置  B. 模拟返回键  C. 模拟主页键"
   echo ""
-  echo "            0. 退出"
+  [[ $logging != 1 ]] && echo "            D. 开启 debug 模式"
+  echo ""
+  echo "            E. 更新工具箱"
+  echo ""
+  echo "            X. 退出"
   echo ""
 
   read -n 1 -p "请键入选项: " key
@@ -445,7 +456,7 @@ function install_root()
     mkdir "$home/apk"
   fi
   echo "将SuperSU授权管理的apk文件放入 $home/apk/ 文件夹中，命名为 Superuser.apk"
-  echo "可从群文件获取SuperSU"
+  echo "由于版权问题不自带SuperSU，可从群文件获取apk"
   pause "按任意键开始执行root"
   if [ ! -f "$home/apk/Superuser.apk" ]; then
     echo ""
@@ -502,17 +513,17 @@ while true
 do
   main
   case $key in
-    0)      clear; exit;;
-    1)      crack;;
-    2)      $home/crack.sh -debug; exit;;
-    3)      update;;
-    4)      crack_auto;;
-    5)      install_ota;;
-    6)      install_apk;;
-    7)      install_root;;
+    1)      crack_auto;;
+    2)      crack;;
+    3)      install_ota;;
+    4)      install_apk;;
+    5)      install_root;;
     a|A)    shortcut "setting";;
     b|B)    shortcut "back";;
     c|C)    shortcut "home";;
+    D|d)    $home/crack.sh -debug; exit;;
+    E|e)    update;;
+    X|x)    clear; exit;;
     *)
     echo ""
     echo "输入错误，请重新尝试"
