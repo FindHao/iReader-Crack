@@ -58,17 +58,8 @@ function init_adb()
     adb kill-server
   fi
   adb start-server
-  sleep 1
-  adb devices
-  adb_check=`adb get-state`
-  echo ${adb_check:0:5} > adblog
-  if [[ `cat adblog` == "error" || `cat adblog` == "* dae" ]]; then
-    echo "加载adb失败，请检查adb驱动及服务"
-    log "Init Adb Failed"
-    pause "按任意键退出"
-    exit
-  fi
-  rm -rf $home/adblog
+  echo "若出现error则adb服务启动失败，请进行检查"
+  sleep 3
 }
 
 function check_env()
