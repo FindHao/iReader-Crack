@@ -507,6 +507,13 @@ function shortcut()
 }
 
 clear
+echo "iReader-Crack工具箱"
+echo "Credit: KazushiMe"
+echo "本作品采用知识共享署名-非商业性使用-禁止演绎 3.0 中国大陆许可协议进行许可。"
+echo "该工具箱完全免费，请在协议允许的范围内进行使用"
+sleep 2
+pause "按任意键启动工具箱"
+clear
 check_env
 init_adb
 while true
