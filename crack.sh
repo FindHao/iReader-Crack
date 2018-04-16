@@ -59,6 +59,7 @@ function init_adb()
   fi
   adb start-server
   sleep 1
+  adb devices
   adb_check=`adb get-state`
   if [[ ${adb_check:0:5} == "error" ]]; then
     echo "加载adb失败，请检查adb驱动及服务"
